@@ -17,7 +17,7 @@ http://www.etl-tools.com
 --DROP TABLE actor;
 
 CREATE TABLE actor (
-  actor_id numeric NOT NULL ,
+  actor_id INT NOT NULL ,
   first_name VARCHAR(45) NOT NULL,
   last_name VARCHAR(45) NOT NULL,
   last_update DATE NOT NULL,
@@ -58,7 +58,7 @@ END;
 --
 
 CREATE TABLE country (
-  country_id SMALLINT NOT NULL,
+  country_id INT NOT NULL,
   country VARCHAR(50) NOT NULL,
   last_update DATE,
   CONSTRAINT pk_country PRIMARY KEY (country_id)
@@ -94,9 +94,9 @@ END;
 --
 
 CREATE TABLE city (
-  city_id int NOT NULL,
+  city_id INT NOT NULL,
   city VARCHAR(50) NOT NULL,
-  country_id SMALLINT NOT NULL,
+  country_id INT NOT NULL,
   last_update DATE NOT NULL,
   CONSTRAINT pk_city PRIMARY KEY (city_id),
   CONSTRAINT fk_city_country FOREIGN KEY (country_id) REFERENCES country (country_id)
@@ -134,7 +134,7 @@ END;
 --
 
 CREATE TABLE address (
-  address_id int NOT NULL,
+  address_id INT NOT NULL,
   address VARCHAR(50) NOT NULL,
   address2 VARCHAR(50) DEFAULT NULL,
   district VARCHAR(20) NOT NULL,
@@ -179,7 +179,7 @@ END;
 --
 
 CREATE TABLE language (
-  language_id SMALLINT NOT NULL ,
+  language_id INT NOT NULL ,
   name CHAR(20) NOT NULL,
   last_update DATE NOT NULL,
   CONSTRAINT pk_language PRIMARY KEY (language_id)
@@ -213,7 +213,7 @@ END;
 --
 
 CREATE TABLE category (
-  category_id SMALLINT NOT NULL,
+  category_id INT NOT NULL,
   name VARCHAR(25) NOT NULL,
   last_update DATE NOT NULL,
   CONSTRAINT pk_category PRIMARY KEY  (category_id)
@@ -293,12 +293,12 @@ END;
 --
 
 CREATE TABLE film (
-  film_id int NOT NULL,
+  film_id INT NOT NULL,
   title VARCHAR(255) NOT NULL,
   description CLOB DEFAULT NULL,
   release_year VARCHAR(4) DEFAULT NULL,
-  language_id SMALLINT NOT NULL,
-  original_language_id SMALLINT DEFAULT NULL,
+  language_id INT NOT NULL,
+  original_language_id INT DEFAULT NULL,
   rental_duration SMALLINT  DEFAULT 3 NOT NULL,
   rental_rate DECIMAL(4,2) DEFAULT 4.99 NOT NULL,
   length SMALLINT DEFAULT NULL,
@@ -386,7 +386,7 @@ END;
 
 CREATE TABLE film_category (
   film_id INT NOT NULL,
-  category_id SMALLINT  NOT NULL,
+  category_id INT  NOT NULL,
   last_update DATE NOT NULL,
   CONSTRAINT pk_film_category PRIMARY KEY (film_id, category_id),
   CONSTRAINT fk_film_category_film FOREIGN KEY (film_id) REFERENCES film (film_id),
@@ -416,7 +416,7 @@ END;
 --
 
 CREATE TABLE film_text (
-  film_id SMALLINT NOT NULL,
+  film_id INT NOT NULL,
   title VARCHAR(255) NOT NULL,
   description CLOB,
   CONSTRAINT pk_film_text PRIMARY KEY  (film_id)
@@ -468,7 +468,7 @@ END;
 --
 
 CREATE TABLE staff (
-  staff_id SMALLINT NOT NULL,
+  staff_id INT NOT NULL,
   first_name VARCHAR(45) NOT NULL,
   last_name VARCHAR(45) NOT NULL,
   address_id INT NOT NULL,
@@ -518,7 +518,7 @@ END;
 
 CREATE TABLE store (
   store_id INT NOT NULL,
-  manager_staff_id SMALLINT NOT NULL,
+  manager_staff_id INT NOT NULL,
   address_id INT NOT NULL,
   last_update DATE NOT NULL,
   CONSTRAINT pk_store PRIMARY KEY  (store_id),
@@ -562,9 +562,9 @@ END;
 --
 
 CREATE TABLE payment (
-  payment_id int NOT NULL,
+  payment_id INT NOT NULL,
   customer_id INT  NOT NULL,
-  staff_id SMALLINT NOT NULL,
+  staff_id INT NOT NULL,
   rental_id INT DEFAULT NULL,
   amount DECIMAL(5,2) NOT NULL,
   payment_date DATE NOT NULL,
@@ -608,7 +608,7 @@ CREATE TABLE rental (
   inventory_id INT  NOT NULL,
   customer_id INT  NOT NULL,
   return_date DATE DEFAULT NULL,
-  staff_id SMALLINT  NOT NULL,
+  staff_id INT  NOT NULL,
   last_update DATE NOT NULL,
   CONSTRAINT pk_rental PRIMARY KEY (rental_id),
   CONSTRAINT fk_rental_staff FOREIGN KEY (staff_id) REFERENCES staff (staff_id) ,
