@@ -1,19 +1,59 @@
-The Sakila example database
-===========================
+# The Sakila example database
 
-The Sakila database is a nicely normalised database modelling a DVD rental store (for those of you old enough to remember what that is). Its design includes a few nice features:
+The Sakila database is a nicely normalised database modelling a DVD
+rental store (for those of you old enough to remember what that
+is). Its design includes a few nice features:
 
 - Many to many relationships
-- Multiple paths between entities (e.g. film-inventory-rental-payment vs film-inventory-store-customer-payment) to practice joins
+- Multiple paths between entities (e.g. film-inventory-rental-payment
+  vs film-inventory-store-customer-payment) to practice joins
 - Consistent naming of columns
   - Primary keys are called `[tablename]_[id]`
-  - Foreign keys are called like their referenced primary key, if possible. This allows for using `JOIN .. USING` syntax where supported
+  - Foreign keys are called like their referenced primary key, if
+    possible. This allows for using `JOIN .. USING` syntax where
+    supported
   - Relationship tables do not have any surrogate keys but use composite primary keys
   - Every table has a `last_update` audit column
   - A generated data set of a reasonable size is available
 
-ERD
-===
+## Engineering
+### Persisting data to the DBMS
+#### Prerequisites
+- make
+- bash
+- target DBMS server
+- target DBMS client
+
+One needs to persist the Sakila data to the DBMS to be able to play
+with it. The target DBMS client should be pointing to the target DBMS
+server
+
+#### PostgreSQL
+Please switch to the postgres directory
+``` bash
+cd postgres-sakila-db
+```
+##### Creating the Schema
+``` bash
+make build
+```
+
+##### Inserting the Data
+``` bash
+make install
+```
+
+##### Deleting the Data
+``` bash
+make uninstall
+```
+
+##### Destroying the Schema
+``` bash
+make clean
+```
+
+### ERD
 
 [![ERD](https://www.jooq.org/img/sakila.png)](https://www.jooq.org/sakila)
 
@@ -70,10 +110,11 @@ payment_date       amount         sum
 ...
 ```
 
-History
-=======
+## History
 
-The Sakila example database was originally developed by Mike Hillyer of the MySQL AB documentation team. it was ported to other databases by DB Software Laboratory 
+The Sakila example database was originally developed by Mike Hillyer
+of the MySQL AB documentation team. it was ported to other databases
+by DB Software Laboratory
 
 License: BSD
 Copyright DB Software Laboratory
