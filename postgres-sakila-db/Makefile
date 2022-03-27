@@ -1,7 +1,7 @@
 log_file = /tmp/sakila-postgresql-session.log
 
 build: postgres-sakila-schema.sql
-	psql --quiet --log-file=$(log_file) < $<
+	sed "s_postgres_\"${USERNAME}\"_g" $< | psql --quiet --log-file=$(log_file)
 install: postgres-sakila-insert-data.sql
 	psql --quiet --log-file=$(log_file) < $<
 uninstall: postgres-sakila-delete-data.sql
