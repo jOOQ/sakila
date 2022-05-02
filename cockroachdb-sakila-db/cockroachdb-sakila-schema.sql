@@ -109,8 +109,7 @@ CREATE TABLE film (
     replacement_cost numeric(5,2) DEFAULT 19.99 NOT NULL,
     rating mpaa_rating DEFAULT 'G'::mpaa_rating,
     last_update timestamp without time zone DEFAULT now() NOT NULL,
-    special_features text[],
-    fulltext text NOT NULL
+    special_features text[]
 );
 
 
