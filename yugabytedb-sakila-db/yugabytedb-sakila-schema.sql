@@ -1,6 +1,6 @@
---
+-ing lsm
 -- PostgreSQL database dump
--- Optimisations for YugabyteDB (Franck Pachot)
+-- Optimisations for YugabyteDB 
 --  - remove create language plpgsql which is there by default
 --  - primary key in create table because YugabyteDB stores table in primary key (no heap table)
 --  - create index nonconcurrently to avoid waiting for dictionary synchrnisation
@@ -864,7 +864,7 @@ CREATE INDEX NONCONCURRENTLY film_fulltext_idx ON film USING gin (fulltext);
 -- Name: idx_actor_last_name; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX NONCONCURRENTLY idx_actor_last_name ON actor USING lsm (last_name);
+CREATE INDEX NONCONCURRENTLY idx_actor_last_name ON actor USING lsm (last_name ASC);
 
 
 --
@@ -1025,7 +1025,7 @@ CREATE INDEX NONCONCURRENTLY idx_fk_store_id ON customer USING lsm (store_id);
 -- Name: idx_last_name; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX NONCONCURRENTLY idx_last_name ON customer USING lsm (last_name);
+CREATE INDEX NONCONCURRENTLY idx_last_name ON customer USING lsm (last_name ASC);
 
 
 --
@@ -1053,7 +1053,7 @@ CREATE UNIQUE INDEX NONCONCURRENTLY idx_unq_manager_staff_id ON store USING lsm 
 -- Name: idx_unq_rental_rental_date_inventory_id_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE UNIQUE INDEX NONCONCURRENTLY idx_unq_rental_rental_date_inventory_id_customer_id ON rental USING lsm (rental_date, inventory_id, customer_id);
+CREATE UNIQUE INDEX NONCONCURRENTLY idx_unq_rental_rental_date_inventory_id_customer_id ON rental USING lsm (rental_date ASC, inventory_id ASC, customer_id ASC);
 
 
 --
