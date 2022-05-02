@@ -1,4 +1,3 @@
--ing lsm
 -- PostgreSQL database dump
 -- Optimisations for YugabyteDB 
 --  - remove create language plpgsql which is there by default
