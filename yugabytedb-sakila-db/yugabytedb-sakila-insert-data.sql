@@ -46719,6 +46719,24 @@ ALTER TABLE payment_p2007_04 ENABLE TRIGGER ALL;
 ALTER TABLE payment_p2007_05 ENABLE TRIGGER ALL;
 ALTER TABLE payment_p2007_06 ENABLE TRIGGER ALL;
 
+-- gather statistics
+
+analyze actor;
+analyze address;
+analyze category;
+analyze city;
+analyze country;
+analyze customer;
+analyze film;
+analyze film_actor;
+analyze film_category;
+analyze inventory;
+analyze language;
+analyze payment;
+analyze rental;
+analyze staff;
+analyze store;
+
 
 
 
