@@ -6,7 +6,7 @@
 --  - create index nonconcurrently to avoid waiting for dictionary synchrnisation
 --  - change inherits for old manual partitioning to partition
 --  - set primary key to (payment_id, payment_date) because there are no global indexes in PostgreSQL
---  - remove ONLY to ALTER TABLE paymenet and move it before create partition and reorder some referenced tables
+--  - remove ONLY to ALTER TABLE payment and move it before create partition and reorder some referenced tables
 --
 
 SET client_encoding = 'UTF8';
@@ -543,6 +543,8 @@ ALTER TABLE payment
 --
 -- Partitions
 --
+
+CREATE TABLE payment_p2007_lt PARTITION OF payment FOR VALUES FROM ('2005-01-01 00:00:00') to ('2007-01-01 00:00:00');
 
 CREATE TABLE payment_p2007_01 PARTITION OF payment FOR VALUES FROM ('2007-01-01 00:00:00') to ('2007-02-01 00:00:00');
 
