@@ -2,66 +2,28 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 15.1
+-- Dumped by pg_dump version 15.0
+
+-- Started on 2022-11-24 15:27:51
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
-SET standard_conforming_strings = off;
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
+SET xmloption = content;
 SET client_min_messages = warning;
-SET escape_string_warning = off;
+SET row_security = off;
 
 --
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
+-- TOC entry 889 (class 1247 OID 27667)
+-- Name: mpaa_rating; Type: TYPE; Schema: public; Owner: -
 --
 
-COMMENT ON SCHEMA public IS 'Standard public schema';
-
-
---
--- Name: plpgsql; Type: PROCEDURAL LANGUAGE; Schema: -; Owner: postgres
---
-
-CREATE OR REPLACE PROCEDURAL LANGUAGE plpgsql;
-
-
-ALTER PROCEDURAL LANGUAGE plpgsql OWNER TO postgres;
-
-SET search_path = public, pg_catalog;
-
---
--- Name: actor_actor_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE actor_actor_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.actor_actor_id_seq OWNER TO postgres;
-
-SET default_tablespace = '';
-
-SET default_with_oids = false;
-
---
--- Name: actor; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE actor (
-    actor_id integer DEFAULT nextval('actor_actor_id_seq'::regclass) NOT NULL,
-    first_name character varying(45) NOT NULL,
-    last_name character varying(45) NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.actor OWNER TO postgres;
-
---
--- Name: mpaa_rating; Type: TYPE; Schema: public; Owner: postgres
---
-
-CREATE TYPE mpaa_rating AS ENUM (
+CREATE TYPE public.mpaa_rating AS ENUM (
     'G',
     'PG',
     'PG-13',
@@ -70,601 +32,70 @@ CREATE TYPE mpaa_rating AS ENUM (
 );
 
 
-ALTER TYPE public.mpaa_rating OWNER TO postgres;
-
 --
--- Name: year; Type: DOMAIN; Schema: public; Owner: postgres
+-- TOC entry 892 (class 1247 OID 27678)
+-- Name: year; Type: DOMAIN; Schema: public; Owner: -
 --
 
-CREATE DOMAIN year AS integer
+CREATE DOMAIN public.year AS integer
 	CONSTRAINT year_check CHECK (((VALUE >= 1901) AND (VALUE <= 2155)));
 
 
-ALTER DOMAIN public.year OWNER TO postgres;
-
 --
--- Name: _group_concat(text, text); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 255 (class 1255 OID 27680)
+-- Name: _group_concat(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION _group_concat(text, text) RETURNS text
+CREATE FUNCTION public._group_concat(text, text) RETURNS text
+    LANGUAGE sql IMMUTABLE
     AS $_$
 SELECT CASE
   WHEN $2 IS NULL THEN $1
   WHEN $1 IS NULL THEN $2
   ELSE $1 || ', ' || $2
 END
-$_$
-    LANGUAGE sql IMMUTABLE;
+$_$;
 
 
-ALTER FUNCTION public._group_concat(text, text) OWNER TO postgres;
-
---
--- Name: group_concat(text); Type: AGGREGATE; Schema: public; Owner: postgres
---
-
-CREATE AGGREGATE group_concat(text) (
-    SFUNC = _group_concat,
-    STYPE = text
-);
-
-
-ALTER AGGREGATE public.group_concat(text) OWNER TO postgres;
-
---
--- Name: category_category_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE category_category_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.category_category_id_seq OWNER TO postgres;
-
---
--- Name: category; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE category (
-    category_id integer DEFAULT nextval('category_category_id_seq'::regclass) NOT NULL,
-    name character varying(25) NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.category OWNER TO postgres;
-
---
--- Name: film_film_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE film_film_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.film_film_id_seq OWNER TO postgres;
-
---
--- Name: film; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE film (
-    film_id integer DEFAULT nextval('film_film_id_seq'::regclass) NOT NULL,
-    title character varying(255) NOT NULL,
-    description text,
-    release_year year,
-    language_id smallint NOT NULL,
-    original_language_id smallint,
-    rental_duration smallint DEFAULT 3 NOT NULL,
-    rental_rate numeric(4,2) DEFAULT 4.99 NOT NULL,
-    length smallint,
-    replacement_cost numeric(5,2) DEFAULT 19.99 NOT NULL,
-    rating mpaa_rating DEFAULT 'G'::mpaa_rating,
-    last_update timestamp without time zone DEFAULT now() NOT NULL,
-    special_features text[],
-    fulltext tsvector NOT NULL
-);
-
-
-ALTER TABLE public.film OWNER TO postgres;
-
---
--- Name: film_actor; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE film_actor (
-    actor_id smallint NOT NULL,
-    film_id smallint NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.film_actor OWNER TO postgres;
-
---
--- Name: film_category; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE film_category (
-    film_id smallint NOT NULL,
-    category_id smallint NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.film_category OWNER TO postgres;
-
---
--- Name: actor_info; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW actor_info AS
-    SELECT a.actor_id, a.first_name, a.last_name, group_concat(DISTINCT (((c.name)::text || ': '::text) || (SELECT group_concat((f.title)::text) AS group_concat FROM ((film f JOIN film_category fc ON ((f.film_id = fc.film_id))) JOIN film_actor fa ON ((f.film_id = fa.film_id))) WHERE ((fc.category_id = c.category_id) AND (fa.actor_id = a.actor_id)) GROUP BY fa.actor_id))) AS film_info FROM (((actor a LEFT JOIN film_actor fa ON ((a.actor_id = fa.actor_id))) LEFT JOIN film_category fc ON ((fa.film_id = fc.film_id))) LEFT JOIN category c ON ((fc.category_id = c.category_id))) GROUP BY a.actor_id, a.first_name, a.last_name;
-
-
-ALTER TABLE public.actor_info OWNER TO postgres;
-
---
--- Name: address_address_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE address_address_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.address_address_id_seq OWNER TO postgres;
-
---
--- Name: address; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE address (
-    address_id integer DEFAULT nextval('address_address_id_seq'::regclass) NOT NULL,
-    address character varying(50) NOT NULL,
-    address2 character varying(50),
-    district character varying(20) NOT NULL,
-    city_id smallint NOT NULL,
-    postal_code character varying(10),
-    phone character varying(20) NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.address OWNER TO postgres;
-
---
--- Name: city_city_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE city_city_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.city_city_id_seq OWNER TO postgres;
-
---
--- Name: city; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE city (
-    city_id integer DEFAULT nextval('city_city_id_seq'::regclass) NOT NULL,
-    city character varying(50) NOT NULL,
-    country_id smallint NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.city OWNER TO postgres;
-
---
--- Name: country_country_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE country_country_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.country_country_id_seq OWNER TO postgres;
-
---
--- Name: country; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE country (
-    country_id integer DEFAULT nextval('country_country_id_seq'::regclass) NOT NULL,
-    country character varying(50) NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.country OWNER TO postgres;
-
---
--- Name: customer_customer_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE customer_customer_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.customer_customer_id_seq OWNER TO postgres;
-
---
--- Name: customer; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE customer (
-    customer_id integer DEFAULT nextval('customer_customer_id_seq'::regclass) NOT NULL,
-    store_id smallint NOT NULL,
-    first_name character varying(45) NOT NULL,
-    last_name character varying(45) NOT NULL,
-    email character varying(50),
-    address_id smallint NOT NULL,
-    activebool boolean DEFAULT true NOT NULL,
-    create_date date DEFAULT ('now'::text)::date NOT NULL,
-    last_update timestamp without time zone DEFAULT now(),
-    active integer
-);
-
-
-ALTER TABLE public.customer OWNER TO postgres;
-
---
--- Name: customer_list; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW customer_list AS
-    SELECT cu.customer_id AS id, (((cu.first_name)::text || ' '::text) || (cu.last_name)::text) AS name, a.address, a.postal_code AS "zip code", a.phone, city.city, country.country, CASE WHEN cu.activebool THEN 'active'::text ELSE ''::text END AS notes, cu.store_id AS sid FROM (((customer cu JOIN address a ON ((cu.address_id = a.address_id))) JOIN city ON ((a.city_id = city.city_id))) JOIN country ON ((city.country_id = country.country_id)));
-
-
-ALTER TABLE public.customer_list OWNER TO postgres;
-
---
--- Name: film_list; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW film_list AS
-    SELECT film.film_id AS fid, film.title, film.description, category.name AS category, film.rental_rate AS price, film.length, film.rating, group_concat((((actor.first_name)::text || ' '::text) || (actor.last_name)::text)) AS actors FROM ((((category LEFT JOIN film_category ON ((category.category_id = film_category.category_id))) LEFT JOIN film ON ((film_category.film_id = film.film_id))) JOIN film_actor ON ((film.film_id = film_actor.film_id))) JOIN actor ON ((film_actor.actor_id = actor.actor_id))) GROUP BY film.film_id, film.title, film.description, category.name, film.rental_rate, film.length, film.rating;
-
-
-ALTER TABLE public.film_list OWNER TO postgres;
-
---
--- Name: inventory_inventory_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE inventory_inventory_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.inventory_inventory_id_seq OWNER TO postgres;
-
---
--- Name: inventory; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE inventory (
-    inventory_id integer DEFAULT nextval('inventory_inventory_id_seq'::regclass) NOT NULL,
-    film_id smallint NOT NULL,
-    store_id smallint NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.inventory OWNER TO postgres;
-
---
--- Name: language_language_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE language_language_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.language_language_id_seq OWNER TO postgres;
-
---
--- Name: language; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE language (
-    language_id integer DEFAULT nextval('language_language_id_seq'::regclass) NOT NULL,
-    name character(20) NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.language OWNER TO postgres;
-
---
--- Name: nicer_but_slower_film_list; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW nicer_but_slower_film_list AS
-    SELECT film.film_id AS fid, film.title, film.description, category.name AS category, film.rental_rate AS price, film.length, film.rating, group_concat((((upper("substring"((actor.first_name)::text, 1, 1)) || lower("substring"((actor.first_name)::text, 2))) || upper("substring"((actor.last_name)::text, 1, 1))) || lower("substring"((actor.last_name)::text, 2)))) AS actors FROM ((((category LEFT JOIN film_category ON ((category.category_id = film_category.category_id))) LEFT JOIN film ON ((film_category.film_id = film.film_id))) JOIN film_actor ON ((film.film_id = film_actor.film_id))) JOIN actor ON ((film_actor.actor_id = actor.actor_id))) GROUP BY film.film_id, film.title, film.description, category.name, film.rental_rate, film.length, film.rating;
-
-
-ALTER TABLE public.nicer_but_slower_film_list OWNER TO postgres;
-
---
--- Name: payment_payment_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE payment_payment_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.payment_payment_id_seq OWNER TO postgres;
-
---
--- Name: payment; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE payment (
-    payment_id integer DEFAULT nextval('payment_payment_id_seq'::regclass) NOT NULL,
-    customer_id smallint NOT NULL,
-    staff_id smallint NOT NULL,
-    rental_id integer NOT NULL,
-    amount numeric(5,2) NOT NULL,
-    payment_date timestamp without time zone NOT NULL
-);
-
-
-ALTER TABLE public.payment OWNER TO postgres;
-
---
--- Name: payment_p2007_01; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE payment_p2007_01 (CONSTRAINT payment_p2007_01_payment_date_check CHECK (((payment_date >= '2007-01-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-02-01 00:00:00'::timestamp without time zone)))
-)
-INHERITS (payment);
-
-
-ALTER TABLE public.payment_p2007_01 OWNER TO postgres;
-
---
--- Name: payment_p2007_02; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE payment_p2007_02 (CONSTRAINT payment_p2007_02_payment_date_check CHECK (((payment_date >= '2007-02-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-03-01 00:00:00'::timestamp without time zone)))
-)
-INHERITS (payment);
-
-
-ALTER TABLE public.payment_p2007_02 OWNER TO postgres;
-
---
--- Name: payment_p2007_03; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE payment_p2007_03 (CONSTRAINT payment_p2007_03_payment_date_check CHECK (((payment_date >= '2007-03-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-04-01 00:00:00'::timestamp without time zone)))
-)
-INHERITS (payment);
-
-
-ALTER TABLE public.payment_p2007_03 OWNER TO postgres;
-
---
--- Name: payment_p2007_04; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE payment_p2007_04 (CONSTRAINT payment_p2007_04_payment_date_check CHECK (((payment_date >= '2007-04-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-05-01 00:00:00'::timestamp without time zone)))
-)
-INHERITS (payment);
-
-
-ALTER TABLE public.payment_p2007_04 OWNER TO postgres;
-
---
--- Name: payment_p2007_05; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE payment_p2007_05 (CONSTRAINT payment_p2007_05_payment_date_check CHECK (((payment_date >= '2007-05-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-06-01 00:00:00'::timestamp without time zone)))
-)
-INHERITS (payment);
-
-
-ALTER TABLE public.payment_p2007_05 OWNER TO postgres;
-
---
--- Name: payment_p2007_06; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE payment_p2007_06 (CONSTRAINT payment_p2007_06_payment_date_check CHECK (((payment_date >= '2007-06-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-07-01 00:00:00'::timestamp without time zone)))
-)
-INHERITS (payment);
-
-
-ALTER TABLE public.payment_p2007_06 OWNER TO postgres;
-
---
--- Name: rental_rental_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE rental_rental_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.rental_rental_id_seq OWNER TO postgres;
-
---
--- Name: rental; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE rental (
-    rental_id integer DEFAULT nextval('rental_rental_id_seq'::regclass) NOT NULL,
-    rental_date timestamp without time zone NOT NULL,
-    inventory_id integer NOT NULL,
-    customer_id smallint NOT NULL,
-    return_date timestamp without time zone,
-    staff_id smallint NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.rental OWNER TO postgres;
-
---
--- Name: sales_by_film_category; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW sales_by_film_category AS
-    SELECT c.name AS category, sum(p.amount) AS total_sales FROM (((((payment p JOIN rental r ON ((p.rental_id = r.rental_id))) JOIN inventory i ON ((r.inventory_id = i.inventory_id))) JOIN film f ON ((i.film_id = f.film_id))) JOIN film_category fc ON ((f.film_id = fc.film_id))) JOIN category c ON ((fc.category_id = c.category_id))) GROUP BY c.name ORDER BY sum(p.amount) DESC;
-
-
-ALTER TABLE public.sales_by_film_category OWNER TO postgres;
-
---
--- Name: staff_staff_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE staff_staff_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.staff_staff_id_seq OWNER TO postgres;
-
---
--- Name: staff; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE staff (
-    staff_id integer DEFAULT nextval('staff_staff_id_seq'::regclass) NOT NULL,
-    first_name character varying(45) NOT NULL,
-    last_name character varying(45) NOT NULL,
-    address_id smallint NOT NULL,
-    email character varying(50),
-    store_id smallint NOT NULL,
-    active boolean DEFAULT true NOT NULL,
-    username character varying(16) NOT NULL,
-    password character varying(40),
-    last_update timestamp without time zone DEFAULT now() NOT NULL,
-    picture bytea
-);
-
-
-ALTER TABLE public.staff OWNER TO postgres;
-
---
--- Name: store_store_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE store_store_id_seq
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.store_store_id_seq OWNER TO postgres;
-
---
--- Name: store; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE store (
-    store_id integer DEFAULT nextval('store_store_id_seq'::regclass) NOT NULL,
-    manager_staff_id smallint NOT NULL,
-    address_id smallint NOT NULL,
-    last_update timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.store OWNER TO postgres;
-
---
--- Name: sales_by_store; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW sales_by_store AS
-    SELECT (((c.city)::text || ','::text) || (cy.country)::text) AS store, (((m.first_name)::text || ' '::text) || (m.last_name)::text) AS manager, sum(p.amount) AS total_sales FROM (((((((payment p JOIN rental r ON ((p.rental_id = r.rental_id))) JOIN inventory i ON ((r.inventory_id = i.inventory_id))) JOIN store s ON ((i.store_id = s.store_id))) JOIN address a ON ((s.address_id = a.address_id))) JOIN city c ON ((a.city_id = c.city_id))) JOIN country cy ON ((c.country_id = cy.country_id))) JOIN staff m ON ((s.manager_staff_id = m.staff_id))) GROUP BY cy.country, c.city, s.store_id, m.first_name, m.last_name ORDER BY cy.country, c.city;
-
-
-ALTER TABLE public.sales_by_store OWNER TO postgres;
-
---
--- Name: staff_list; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW staff_list AS
-    SELECT s.staff_id AS id, (((s.first_name)::text || ' '::text) || (s.last_name)::text) AS name, a.address, a.postal_code AS "zip code", a.phone, city.city, country.country, s.store_id AS sid FROM (((staff s JOIN address a ON ((s.address_id = a.address_id))) JOIN city ON ((a.city_id = city.city_id))) JOIN country ON ((city.country_id = country.country_id)));
-
-
-ALTER TABLE public.staff_list OWNER TO postgres;
-
 --
--- Name: film_in_stock(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 256 (class 1255 OID 27837)
+-- Name: film_in_stock(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION film_in_stock(p_film_id integer, p_store_id integer, OUT p_film_count integer) RETURNS SETOF integer
+CREATE FUNCTION public.film_in_stock(p_film_id integer, p_store_id integer, OUT p_film_count integer) RETURNS SETOF integer
+    LANGUAGE sql
     AS $_$
      SELECT inventory_id
      FROM inventory
      WHERE film_id = $1
      AND store_id = $2
      AND inventory_in_stock(inventory_id);
-$_$
-    LANGUAGE sql;
+$_$;
 
-
-ALTER FUNCTION public.film_in_stock(p_film_id integer, p_store_id integer, OUT p_film_count integer) OWNER TO postgres;
 
 --
--- Name: film_not_in_stock(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 257 (class 1255 OID 27838)
+-- Name: film_not_in_stock(integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION film_not_in_stock(p_film_id integer, p_store_id integer, OUT p_film_count integer) RETURNS SETOF integer
+CREATE FUNCTION public.film_not_in_stock(p_film_id integer, p_store_id integer, OUT p_film_count integer) RETURNS SETOF integer
+    LANGUAGE sql
     AS $_$
     SELECT inventory_id
     FROM inventory
     WHERE film_id = $1
     AND store_id = $2
     AND NOT inventory_in_stock(inventory_id);
-$_$
-    LANGUAGE sql;
+$_$;
 
-
-ALTER FUNCTION public.film_not_in_stock(p_film_id integer, p_store_id integer, OUT p_film_count integer) OWNER TO postgres;
 
 --
--- Name: get_customer_balance(integer, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 269 (class 1255 OID 27839)
+-- Name: get_customer_balance(integer, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION get_customer_balance(p_customer_id integer, p_effective_date timestamp without time zone) RETURNS numeric
+CREATE FUNCTION public.get_customer_balance(p_customer_id integer, p_effective_date timestamp without time zone) RETURNS numeric
+    LANGUAGE plpgsql
     AS $$
        --#OK, WE NEED TO CALCULATE THE CURRENT BALANCE GIVEN A CUSTOMER_ID AND A DATE
        --#THAT WE WANT THE BALANCE TO BE EFFECTIVE FOR. THE BALANCE IS:
@@ -699,17 +130,16 @@ BEGIN
 
     RETURN v_rentfees + v_overfees - v_payments;
 END
-$$
-    LANGUAGE plpgsql;
+$$;
 
-
-ALTER FUNCTION public.get_customer_balance(p_customer_id integer, p_effective_date timestamp without time zone) OWNER TO postgres;
 
 --
--- Name: inventory_held_by_customer(integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 270 (class 1255 OID 27840)
+-- Name: inventory_held_by_customer(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION inventory_held_by_customer(p_inventory_id integer) RETURNS integer
+CREATE FUNCTION public.inventory_held_by_customer(p_inventory_id integer) RETURNS integer
+    LANGUAGE plpgsql
     AS $$
 DECLARE
     v_customer_id INTEGER;
@@ -721,17 +151,16 @@ BEGIN
   AND inventory_id = p_inventory_id;
 
   RETURN v_customer_id;
-END $$
-    LANGUAGE plpgsql;
+END $$;
 
-
-ALTER FUNCTION public.inventory_held_by_customer(p_inventory_id integer) OWNER TO postgres;
 
 --
--- Name: inventory_in_stock(integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 271 (class 1255 OID 27841)
+-- Name: inventory_in_stock(integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION inventory_in_stock(p_inventory_id integer) RETURNS boolean
+CREATE FUNCTION public.inventory_in_stock(p_inventory_id integer) RETURNS boolean
+    LANGUAGE plpgsql
     AS $$
 DECLARE
     v_rentals INTEGER;
@@ -758,17 +187,16 @@ BEGIN
     ELSE
       RETURN TRUE;
     END IF;
-END $$
-    LANGUAGE plpgsql;
+END $$;
 
-
-ALTER FUNCTION public.inventory_in_stock(p_inventory_id integer) OWNER TO postgres;
 
 --
--- Name: last_day(timestamp without time zone); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 272 (class 1255 OID 27842)
+-- Name: last_day(timestamp without time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION last_day(timestamp without time zone) RETURNS date
+CREATE FUNCTION public.last_day(timestamp without time zone) RETURNS date
+    LANGUAGE sql IMMUTABLE STRICT
     AS $_$
   SELECT CASE
     WHEN EXTRACT(MONTH FROM $1) = 12 THEN
@@ -776,32 +204,64 @@ CREATE FUNCTION last_day(timestamp without time zone) RETURNS date
     ELSE
       ((EXTRACT(YEAR FROM $1) operator(pg_catalog.||) '-' operator(pg_catalog.||) (EXTRACT(MONTH FROM $1) + 1) operator(pg_catalog.||) '-01')::date - INTERVAL '1 day')::date
     END
-$_$
-    LANGUAGE sql IMMUTABLE STRICT;
+$_$;
 
-
-ALTER FUNCTION public.last_day(timestamp without time zone) OWNER TO postgres;
 
 --
--- Name: last_updated(); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 273 (class 1255 OID 27843)
+-- Name: last_updated(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION last_updated() RETURNS trigger
+CREATE FUNCTION public.last_updated() RETURNS trigger
+    LANGUAGE plpgsql
     AS $$
 BEGIN
     NEW.last_update = CURRENT_TIMESTAMP;
     RETURN NEW;
-END $$
-    LANGUAGE plpgsql;
+END $$;
 
-
-ALTER FUNCTION public.last_updated() OWNER TO postgres;
 
 --
--- Name: rewards_report(integer, numeric); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 229 (class 1259 OID 27731)
+-- Name: customer_customer_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE FUNCTION rewards_report(min_monthly_purchases integer, min_dollar_amount_purchased numeric) RETURNS SETOF customer
+CREATE SEQUENCE public.customer_customer_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 230 (class 1259 OID 27732)
+-- Name: customer; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.customer (
+    customer_id integer DEFAULT nextval('public.customer_customer_id_seq'::regclass) NOT NULL,
+    store_id smallint NOT NULL,
+    first_name character varying(45) NOT NULL,
+    last_name character varying(45) NOT NULL,
+    email character varying(50),
+    address_id smallint NOT NULL,
+    activebool boolean DEFAULT true NOT NULL,
+    create_date date DEFAULT ('now'::text)::date NOT NULL,
+    last_update timestamp without time zone DEFAULT now(),
+    active integer
+);
+
+
+--
+-- TOC entry 274 (class 1255 OID 27844)
+-- Name: rewards_report(integer, numeric); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.rewards_report(min_monthly_purchases integer, min_dollar_amount_purchased numeric) RETURNS SETOF public.customer
+    LANGUAGE plpgsql SECURITY DEFINER
     AS $_$
 DECLARE
     last_month_start DATE;
@@ -855,855 +315,643 @@ BEGIN
 
 RETURN;
 END
-$_$
-    LANGUAGE plpgsql SECURITY DEFINER;
+$_$;
 
 
-ALTER FUNCTION public.rewards_report(min_monthly_purchases integer, min_dollar_amount_purchased numeric) OWNER TO postgres;
-
---
--- Name: actor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY actor
-    ADD CONSTRAINT actor_pkey PRIMARY KEY (actor_id);
-
-
---
--- Name: address_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY address
-    ADD CONSTRAINT address_pkey PRIMARY KEY (address_id);
-
-
---
--- Name: category_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY category
-    ADD CONSTRAINT category_pkey PRIMARY KEY (category_id);
-
-
---
--- Name: city_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY city
-    ADD CONSTRAINT city_pkey PRIMARY KEY (city_id);
-
-
---
--- Name: country_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY country
-    ADD CONSTRAINT country_pkey PRIMARY KEY (country_id);
-
-
---
--- Name: customer_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY customer
-    ADD CONSTRAINT customer_pkey PRIMARY KEY (customer_id);
-
-
---
--- Name: film_actor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY film_actor
-    ADD CONSTRAINT film_actor_pkey PRIMARY KEY (actor_id, film_id);
-
-
---
--- Name: film_category_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY film_category
-    ADD CONSTRAINT film_category_pkey PRIMARY KEY (film_id, category_id);
-
-
---
--- Name: film_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY film
-    ADD CONSTRAINT film_pkey PRIMARY KEY (film_id);
-
-
---
--- Name: inventory_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY inventory
-    ADD CONSTRAINT inventory_pkey PRIMARY KEY (inventory_id);
-
-
---
--- Name: language_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY language
-    ADD CONSTRAINT language_pkey PRIMARY KEY (language_id);
-
-
---
--- Name: payment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY payment
-    ADD CONSTRAINT payment_pkey PRIMARY KEY (payment_id);
-
-
---
--- Name: rental_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY rental
-    ADD CONSTRAINT rental_pkey PRIMARY KEY (rental_id);
-
-
---
--- Name: staff_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY staff
-    ADD CONSTRAINT staff_pkey PRIMARY KEY (staff_id);
-
-
---
--- Name: store_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY store
-    ADD CONSTRAINT store_pkey PRIMARY KEY (store_id);
-
-
---
--- Name: film_fulltext_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX film_fulltext_idx ON film USING gist (fulltext);
-
-
---
--- Name: idx_actor_last_name; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_actor_last_name ON actor USING btree (last_name);
-
-
---
--- Name: idx_fk_address_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_address_id ON customer USING btree (address_id);
-
-
---
--- Name: idx_fk_city_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_city_id ON address USING btree (city_id);
-
-
---
--- Name: idx_fk_country_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_country_id ON city USING btree (country_id);
-
-
---
--- Name: idx_fk_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_customer_id ON payment USING btree (customer_id);
-
-
---
--- Name: idx_fk_film_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_film_id ON film_actor USING btree (film_id);
-
-
---
--- Name: idx_fk_inventory_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_inventory_id ON rental USING btree (inventory_id);
-
-
---
--- Name: idx_fk_language_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_language_id ON film USING btree (language_id);
-
-
---
--- Name: idx_fk_original_language_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_original_language_id ON film USING btree (original_language_id);
-
-
---
--- Name: idx_fk_payment_p2007_01_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_01_customer_id ON payment_p2007_01 USING btree (customer_id);
-
-
---
--- Name: idx_fk_payment_p2007_01_staff_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_01_staff_id ON payment_p2007_01 USING btree (staff_id);
-
-
---
--- Name: idx_fk_payment_p2007_02_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_02_customer_id ON payment_p2007_02 USING btree (customer_id);
-
-
---
--- Name: idx_fk_payment_p2007_02_staff_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_02_staff_id ON payment_p2007_02 USING btree (staff_id);
-
-
---
--- Name: idx_fk_payment_p2007_03_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_03_customer_id ON payment_p2007_03 USING btree (customer_id);
-
-
---
--- Name: idx_fk_payment_p2007_03_staff_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_03_staff_id ON payment_p2007_03 USING btree (staff_id);
-
-
---
--- Name: idx_fk_payment_p2007_04_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_04_customer_id ON payment_p2007_04 USING btree (customer_id);
-
-
---
--- Name: idx_fk_payment_p2007_04_staff_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_04_staff_id ON payment_p2007_04 USING btree (staff_id);
-
-
---
--- Name: idx_fk_payment_p2007_05_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_05_customer_id ON payment_p2007_05 USING btree (customer_id);
-
-
---
--- Name: idx_fk_payment_p2007_05_staff_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_05_staff_id ON payment_p2007_05 USING btree (staff_id);
-
-
---
--- Name: idx_fk_payment_p2007_06_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_06_customer_id ON payment_p2007_06 USING btree (customer_id);
-
-
---
--- Name: idx_fk_payment_p2007_06_staff_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_payment_p2007_06_staff_id ON payment_p2007_06 USING btree (staff_id);
-
-
---
--- Name: idx_fk_staff_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_staff_id ON payment USING btree (staff_id);
-
-
---
--- Name: idx_fk_store_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_fk_store_id ON customer USING btree (store_id);
-
-
---
--- Name: idx_last_name; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_last_name ON customer USING btree (last_name);
-
-
---
--- Name: idx_store_id_film_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_store_id_film_id ON inventory USING btree (store_id, film_id);
-
-
---
--- Name: idx_title; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX idx_title ON film USING btree (title);
-
-
---
--- Name: idx_unq_manager_staff_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE UNIQUE INDEX idx_unq_manager_staff_id ON store USING btree (manager_staff_id);
-
-
---
--- Name: idx_unq_rental_rental_date_inventory_id_customer_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE UNIQUE INDEX idx_unq_rental_rental_date_inventory_id_customer_id ON rental USING btree (rental_date, inventory_id, customer_id);
-
-
---
--- Name: payment_insert_p2007_01; Type: RULE; Schema: public; Owner: postgres
---
-
-CREATE RULE payment_insert_p2007_01 AS ON INSERT TO payment WHERE ((new.payment_date >= '2007-01-01 00:00:00'::timestamp without time zone) AND (new.payment_date < '2007-02-01 00:00:00'::timestamp without time zone)) DO INSTEAD INSERT INTO payment_p2007_01 (payment_id, customer_id, staff_id, rental_id, amount, payment_date) VALUES (DEFAULT, new.customer_id, new.staff_id, new.rental_id, new.amount, new.payment_date);
-
-
---
--- Name: payment_insert_p2007_02; Type: RULE; Schema: public; Owner: postgres
---
-
-CREATE RULE payment_insert_p2007_02 AS ON INSERT TO payment WHERE ((new.payment_date >= '2007-02-01 00:00:00'::timestamp without time zone) AND (new.payment_date < '2007-03-01 00:00:00'::timestamp without time zone)) DO INSTEAD INSERT INTO payment_p2007_02 (payment_id, customer_id, staff_id, rental_id, amount, payment_date) VALUES (DEFAULT, new.customer_id, new.staff_id, new.rental_id, new.amount, new.payment_date);
-
-
---
--- Name: payment_insert_p2007_03; Type: RULE; Schema: public; Owner: postgres
---
-
-CREATE RULE payment_insert_p2007_03 AS ON INSERT TO payment WHERE ((new.payment_date >= '2007-03-01 00:00:00'::timestamp without time zone) AND (new.payment_date < '2007-04-01 00:00:00'::timestamp without time zone)) DO INSTEAD INSERT INTO payment_p2007_03 (payment_id, customer_id, staff_id, rental_id, amount, payment_date) VALUES (DEFAULT, new.customer_id, new.staff_id, new.rental_id, new.amount, new.payment_date);
-
-
---
--- Name: payment_insert_p2007_04; Type: RULE; Schema: public; Owner: postgres
---
-
-CREATE RULE payment_insert_p2007_04 AS ON INSERT TO payment WHERE ((new.payment_date >= '2007-04-01 00:00:00'::timestamp without time zone) AND (new.payment_date < '2007-05-01 00:00:00'::timestamp without time zone)) DO INSTEAD INSERT INTO payment_p2007_04 (payment_id, customer_id, staff_id, rental_id, amount, payment_date) VALUES (DEFAULT, new.customer_id, new.staff_id, new.rental_id, new.amount, new.payment_date);
-
-
---
--- Name: payment_insert_p2007_05; Type: RULE; Schema: public; Owner: postgres
---
-
-CREATE RULE payment_insert_p2007_05 AS ON INSERT TO payment WHERE ((new.payment_date >= '2007-05-01 00:00:00'::timestamp without time zone) AND (new.payment_date < '2007-06-01 00:00:00'::timestamp without time zone)) DO INSTEAD INSERT INTO payment_p2007_05 (payment_id, customer_id, staff_id, rental_id, amount, payment_date) VALUES (DEFAULT, new.customer_id, new.staff_id, new.rental_id, new.amount, new.payment_date);
-
-
---
--- Name: payment_insert_p2007_06; Type: RULE; Schema: public; Owner: postgres
---
-
-CREATE RULE payment_insert_p2007_06 AS ON INSERT TO payment WHERE ((new.payment_date >= '2007-06-01 00:00:00'::timestamp without time zone) AND (new.payment_date < '2007-07-01 00:00:00'::timestamp without time zone)) DO INSTEAD INSERT INTO payment_p2007_06 (payment_id, customer_id, staff_id, rental_id, amount, payment_date) VALUES (DEFAULT, new.customer_id, new.staff_id, new.rental_id, new.amount, new.payment_date);
-
-
---
--- Name: film_fulltext_trigger; Type: TRIGGER; Schema: public; Owner: postgres
---
-
-CREATE TRIGGER film_fulltext_trigger
-    BEFORE INSERT OR UPDATE ON film
-    FOR EACH ROW
-    EXECUTE PROCEDURE tsvector_update_trigger('fulltext', 'pg_catalog.english', 'title', 'description');
-
-
---
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
---
-
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON actor
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
-
-
---
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
 --
-
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON address
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
-
-
---
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
---
-
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON category
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
-
-
---
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
---
-
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON city
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
-
-
---
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
---
-
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON country
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
-
-
---
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 978 (class 1255 OID 27681)
+-- Name: group_concat(text); Type: AGGREGATE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON customer
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE AGGREGATE public.group_concat(text) (
+    SFUNC = public._group_concat,
+    STYPE = text
+);
 
 
 --
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 214 (class 1259 OID 27660)
+-- Name: actor_actor_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON film
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE SEQUENCE public.actor_actor_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 215 (class 1259 OID 27661)
+-- Name: actor; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON film_actor
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE TABLE public.actor (
+    actor_id integer DEFAULT nextval('public.actor_actor_id_seq'::regclass) NOT NULL,
+    first_name character varying(45) NOT NULL,
+    last_name character varying(45) NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 216 (class 1259 OID 27682)
+-- Name: category_category_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON film_category
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE SEQUENCE public.category_category_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 217 (class 1259 OID 27683)
+-- Name: category; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON inventory
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE TABLE public.category (
+    category_id integer DEFAULT nextval('public.category_category_id_seq'::regclass) NOT NULL,
+    name character varying(25) NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 218 (class 1259 OID 27688)
+-- Name: film_film_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON language
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE SEQUENCE public.film_film_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 219 (class 1259 OID 27689)
+-- Name: film; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON rental
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE TABLE public.film (
+    film_id integer DEFAULT nextval('public.film_film_id_seq'::regclass) NOT NULL,
+    title character varying(255) NOT NULL,
+    description text,
+    release_year public.year,
+    language_id smallint NOT NULL,
+    original_language_id smallint,
+    rental_duration smallint DEFAULT 3 NOT NULL,
+    rental_rate numeric(4,2) DEFAULT 4.99 NOT NULL,
+    length smallint,
+    replacement_cost numeric(5,2) DEFAULT 19.99 NOT NULL,
+    rating public.mpaa_rating DEFAULT 'G'::public.mpaa_rating,
+    last_update timestamp without time zone DEFAULT now() NOT NULL,
+    special_features text[],
+    fulltext tsvector NOT NULL
+);
 
 
 --
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 220 (class 1259 OID 27700)
+-- Name: film_actor; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON staff
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE TABLE public.film_actor (
+    actor_id smallint NOT NULL,
+    film_id smallint NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: last_updated; Type: TRIGGER; Schema: public; Owner: postgres
+-- TOC entry 221 (class 1259 OID 27704)
+-- Name: film_category; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TRIGGER last_updated
-    BEFORE UPDATE ON store
-    FOR EACH ROW
-    EXECUTE PROCEDURE last_updated();
+CREATE TABLE public.film_category (
+    film_id smallint NOT NULL,
+    category_id smallint NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: address_city_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 222 (class 1259 OID 27708)
+-- Name: actor_info; Type: VIEW; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY address
-    ADD CONSTRAINT address_city_id_fkey FOREIGN KEY (city_id) REFERENCES city(city_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE VIEW public.actor_info AS
+ SELECT a.actor_id,
+    a.first_name,
+    a.last_name,
+    public.group_concat(DISTINCT (((c.name)::text || ': '::text) || ( SELECT public.group_concat((f.title)::text) AS group_concat
+           FROM ((public.film f
+             JOIN public.film_category fc_1 ON ((f.film_id = fc_1.film_id)))
+             JOIN public.film_actor fa_1 ON ((f.film_id = fa_1.film_id)))
+          WHERE ((fc_1.category_id = c.category_id) AND (fa_1.actor_id = a.actor_id))
+          GROUP BY fa_1.actor_id))) AS film_info
+   FROM (((public.actor a
+     LEFT JOIN public.film_actor fa ON ((a.actor_id = fa.actor_id)))
+     LEFT JOIN public.film_category fc ON ((fa.film_id = fc.film_id)))
+     LEFT JOIN public.category c ON ((fc.category_id = c.category_id)))
+  GROUP BY a.actor_id, a.first_name, a.last_name;
 
 
 --
--- Name: city_country_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 223 (class 1259 OID 27713)
+-- Name: address_address_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY city
-    ADD CONSTRAINT city_country_id_fkey FOREIGN KEY (country_id) REFERENCES country(country_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE SEQUENCE public.address_address_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: customer_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 224 (class 1259 OID 27714)
+-- Name: address; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY customer
-    ADD CONSTRAINT customer_address_id_fkey FOREIGN KEY (address_id) REFERENCES address(address_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE TABLE public.address (
+    address_id integer DEFAULT nextval('public.address_address_id_seq'::regclass) NOT NULL,
+    address character varying(50) NOT NULL,
+    address2 character varying(50),
+    district character varying(20) NOT NULL,
+    city_id smallint NOT NULL,
+    postal_code character varying(10),
+    phone character varying(20) NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: customer_store_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 225 (class 1259 OID 27719)
+-- Name: city_city_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY customer
-    ADD CONSTRAINT customer_store_id_fkey FOREIGN KEY (store_id) REFERENCES store(store_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE SEQUENCE public.city_city_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: film_actor_actor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 226 (class 1259 OID 27720)
+-- Name: city; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY film_actor
-    ADD CONSTRAINT film_actor_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES actor(actor_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE TABLE public.city (
+    city_id integer DEFAULT nextval('public.city_city_id_seq'::regclass) NOT NULL,
+    city character varying(50) NOT NULL,
+    country_id smallint NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: film_actor_film_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 227 (class 1259 OID 27725)
+-- Name: country_country_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY film_actor
-    ADD CONSTRAINT film_actor_film_id_fkey FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE SEQUENCE public.country_country_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: film_category_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 228 (class 1259 OID 27726)
+-- Name: country; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY film_category
-    ADD CONSTRAINT film_category_category_id_fkey FOREIGN KEY (category_id) REFERENCES category(category_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE TABLE public.country (
+    country_id integer DEFAULT nextval('public.country_country_id_seq'::regclass) NOT NULL,
+    country character varying(50) NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: film_category_film_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 231 (class 1259 OID 27739)
+-- Name: customer_list; Type: VIEW; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY film_category
-    ADD CONSTRAINT film_category_film_id_fkey FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE VIEW public.customer_list AS
+ SELECT cu.customer_id AS id,
+    (((cu.first_name)::text || ' '::text) || (cu.last_name)::text) AS name,
+    a.address,
+    a.postal_code AS "zip code",
+    a.phone,
+    city.city,
+    country.country,
+        CASE
+            WHEN cu.activebool THEN 'active'::text
+            ELSE ''::text
+        END AS notes,
+    cu.store_id AS sid
+   FROM (((public.customer cu
+     JOIN public.address a ON ((cu.address_id = a.address_id)))
+     JOIN public.city ON ((a.city_id = city.city_id)))
+     JOIN public.country ON ((city.country_id = country.country_id)));
 
 
 --
--- Name: film_language_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 232 (class 1259 OID 27744)
+-- Name: film_list; Type: VIEW; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY film
-    ADD CONSTRAINT film_language_id_fkey FOREIGN KEY (language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE VIEW public.film_list AS
+ SELECT film.film_id AS fid,
+    film.title,
+    film.description,
+    category.name AS category,
+    film.rental_rate AS price,
+    film.length,
+    film.rating,
+    public.group_concat((((actor.first_name)::text || ' '::text) || (actor.last_name)::text)) AS actors
+   FROM ((((public.category
+     LEFT JOIN public.film_category ON ((category.category_id = film_category.category_id)))
+     LEFT JOIN public.film ON ((film_category.film_id = film.film_id)))
+     JOIN public.film_actor ON ((film.film_id = film_actor.film_id)))
+     JOIN public.actor ON ((film_actor.actor_id = actor.actor_id)))
+  GROUP BY film.film_id, film.title, film.description, category.name, film.rental_rate, film.length, film.rating;
 
 
 --
--- Name: film_original_language_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 233 (class 1259 OID 27749)
+-- Name: inventory_inventory_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY film
-    ADD CONSTRAINT film_original_language_id_fkey FOREIGN KEY (original_language_id) REFERENCES language(language_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE SEQUENCE public.inventory_inventory_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: inventory_film_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 234 (class 1259 OID 27750)
+-- Name: inventory; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY inventory
-    ADD CONSTRAINT inventory_film_id_fkey FOREIGN KEY (film_id) REFERENCES film(film_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE TABLE public.inventory (
+    inventory_id integer DEFAULT nextval('public.inventory_inventory_id_seq'::regclass) NOT NULL,
+    film_id smallint NOT NULL,
+    store_id smallint NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: inventory_store_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 235 (class 1259 OID 27755)
+-- Name: language_language_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY inventory
-    ADD CONSTRAINT inventory_store_id_fkey FOREIGN KEY (store_id) REFERENCES store(store_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE SEQUENCE public.language_language_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: payment_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 236 (class 1259 OID 27756)
+-- Name: language; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment
-    ADD CONSTRAINT payment_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE TABLE public.language (
+    language_id integer DEFAULT nextval('public.language_language_id_seq'::regclass) NOT NULL,
+    name character(20) NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: payment_p2007_01_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 237 (class 1259 OID 27761)
+-- Name: nicer_but_slower_film_list; Type: VIEW; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_01
-    ADD CONSTRAINT payment_p2007_01_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(customer_id);
+CREATE VIEW public.nicer_but_slower_film_list AS
+ SELECT film.film_id AS fid,
+    film.title,
+    film.description,
+    category.name AS category,
+    film.rental_rate AS price,
+    film.length,
+    film.rating,
+    public.group_concat((((upper("substring"((actor.first_name)::text, 1, 1)) || lower("substring"((actor.first_name)::text, 2))) || upper("substring"((actor.last_name)::text, 1, 1))) || lower("substring"((actor.last_name)::text, 2)))) AS actors
+   FROM ((((public.category
+     LEFT JOIN public.film_category ON ((category.category_id = film_category.category_id)))
+     LEFT JOIN public.film ON ((film_category.film_id = film.film_id)))
+     JOIN public.film_actor ON ((film.film_id = film_actor.film_id)))
+     JOIN public.actor ON ((film_actor.actor_id = actor.actor_id)))
+  GROUP BY film.film_id, film.title, film.description, category.name, film.rental_rate, film.length, film.rating;
 
 
 --
--- Name: payment_p2007_01_rental_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 238 (class 1259 OID 27766)
+-- Name: payment_payment_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_01
-    ADD CONSTRAINT payment_p2007_01_rental_id_fkey FOREIGN KEY (rental_id) REFERENCES rental(rental_id);
+CREATE SEQUENCE public.payment_payment_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: payment_p2007_01_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 239 (class 1259 OID 27767)
+-- Name: payment; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_01
-    ADD CONSTRAINT payment_p2007_01_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES staff(staff_id);
+CREATE TABLE public.payment (
+    payment_id integer DEFAULT nextval('public.payment_payment_id_seq'::regclass) NOT NULL,
+    customer_id smallint NOT NULL,
+    staff_id smallint NOT NULL,
+    rental_id integer NOT NULL,
+    amount numeric(5,2) NOT NULL,
+    payment_date timestamp without time zone NOT NULL
+);
 
 
 --
--- Name: payment_p2007_02_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 240 (class 1259 OID 27771)
+-- Name: payment_p2007_01; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_02
-    ADD CONSTRAINT payment_p2007_02_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(customer_id);
+CREATE TABLE public.payment_p2007_01 (
+    CONSTRAINT payment_p2007_01_payment_date_check CHECK (((payment_date >= '2007-01-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-02-01 00:00:00'::timestamp without time zone)))
+)
+INHERITS (public.payment);
 
 
 --
--- Name: payment_p2007_02_rental_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 241 (class 1259 OID 27776)
+-- Name: payment_p2007_02; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_02
-    ADD CONSTRAINT payment_p2007_02_rental_id_fkey FOREIGN KEY (rental_id) REFERENCES rental(rental_id);
+CREATE TABLE public.payment_p2007_02 (
+    CONSTRAINT payment_p2007_02_payment_date_check CHECK (((payment_date >= '2007-02-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-03-01 00:00:00'::timestamp without time zone)))
+)
+INHERITS (public.payment);
 
 
 --
--- Name: payment_p2007_02_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 242 (class 1259 OID 27781)
+-- Name: payment_p2007_03; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_02
-    ADD CONSTRAINT payment_p2007_02_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES staff(staff_id);
+CREATE TABLE public.payment_p2007_03 (
+    CONSTRAINT payment_p2007_03_payment_date_check CHECK (((payment_date >= '2007-03-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-04-01 00:00:00'::timestamp without time zone)))
+)
+INHERITS (public.payment);
 
 
 --
--- Name: payment_p2007_03_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 243 (class 1259 OID 27786)
+-- Name: payment_p2007_04; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_03
-    ADD CONSTRAINT payment_p2007_03_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(customer_id);
+CREATE TABLE public.payment_p2007_04 (
+    CONSTRAINT payment_p2007_04_payment_date_check CHECK (((payment_date >= '2007-04-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-05-01 00:00:00'::timestamp without time zone)))
+)
+INHERITS (public.payment);
 
 
 --
--- Name: payment_p2007_03_rental_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 244 (class 1259 OID 27791)
+-- Name: payment_p2007_05; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_03
-    ADD CONSTRAINT payment_p2007_03_rental_id_fkey FOREIGN KEY (rental_id) REFERENCES rental(rental_id);
+CREATE TABLE public.payment_p2007_05 (
+    CONSTRAINT payment_p2007_05_payment_date_check CHECK (((payment_date >= '2007-05-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-06-01 00:00:00'::timestamp without time zone)))
+)
+INHERITS (public.payment);
 
 
 --
--- Name: payment_p2007_03_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 245 (class 1259 OID 27796)
+-- Name: payment_p2007_06; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_03
-    ADD CONSTRAINT payment_p2007_03_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES staff(staff_id);
+CREATE TABLE public.payment_p2007_06 (
+    CONSTRAINT payment_p2007_06_payment_date_check CHECK (((payment_date >= '2007-06-01 00:00:00'::timestamp without time zone) AND (payment_date < '2007-07-01 00:00:00'::timestamp without time zone)))
+)
+INHERITS (public.payment);
 
 
 --
--- Name: payment_p2007_04_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 246 (class 1259 OID 27801)
+-- Name: rental_rental_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_04
-    ADD CONSTRAINT payment_p2007_04_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(customer_id);
+CREATE SEQUENCE public.rental_rental_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: payment_p2007_04_rental_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 247 (class 1259 OID 27802)
+-- Name: rental; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_04
-    ADD CONSTRAINT payment_p2007_04_rental_id_fkey FOREIGN KEY (rental_id) REFERENCES rental(rental_id);
+CREATE TABLE public.rental (
+    rental_id integer DEFAULT nextval('public.rental_rental_id_seq'::regclass) NOT NULL,
+    rental_date timestamp without time zone NOT NULL,
+    inventory_id integer NOT NULL,
+    customer_id smallint NOT NULL,
+    return_date timestamp without time zone,
+    staff_id smallint NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: payment_p2007_04_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 248 (class 1259 OID 27807)
+-- Name: sales_by_film_category; Type: VIEW; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_04
-    ADD CONSTRAINT payment_p2007_04_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES staff(staff_id);
+CREATE VIEW public.sales_by_film_category AS
+ SELECT c.name AS category,
+    sum(p.amount) AS total_sales
+   FROM (((((public.payment p
+     JOIN public.rental r ON ((p.rental_id = r.rental_id)))
+     JOIN public.inventory i ON ((r.inventory_id = i.inventory_id)))
+     JOIN public.film f ON ((i.film_id = f.film_id)))
+     JOIN public.film_category fc ON ((f.film_id = fc.film_id)))
+     JOIN public.category c ON ((fc.category_id = c.category_id)))
+  GROUP BY c.name
+  ORDER BY (sum(p.amount)) DESC;
 
 
 --
--- Name: payment_p2007_05_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 249 (class 1259 OID 27812)
+-- Name: staff_staff_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_05
-    ADD CONSTRAINT payment_p2007_05_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(customer_id);
+CREATE SEQUENCE public.staff_staff_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: payment_p2007_05_rental_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 250 (class 1259 OID 27813)
+-- Name: staff; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_05
-    ADD CONSTRAINT payment_p2007_05_rental_id_fkey FOREIGN KEY (rental_id) REFERENCES rental(rental_id);
+CREATE TABLE public.staff (
+    staff_id integer DEFAULT nextval('public.staff_staff_id_seq'::regclass) NOT NULL,
+    first_name character varying(45) NOT NULL,
+    last_name character varying(45) NOT NULL,
+    address_id smallint NOT NULL,
+    email character varying(50),
+    store_id smallint NOT NULL,
+    active boolean DEFAULT true NOT NULL,
+    username character varying(16) NOT NULL,
+    password character varying(40),
+    last_update timestamp without time zone DEFAULT now() NOT NULL,
+    picture bytea
+);
 
 
 --
--- Name: payment_p2007_05_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 251 (class 1259 OID 27821)
+-- Name: store_store_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_05
-    ADD CONSTRAINT payment_p2007_05_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES staff(staff_id);
+CREATE SEQUENCE public.store_store_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
--- Name: payment_p2007_06_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 252 (class 1259 OID 27822)
+-- Name: store; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_06
-    ADD CONSTRAINT payment_p2007_06_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(customer_id);
+CREATE TABLE public.store (
+    store_id integer DEFAULT nextval('public.store_store_id_seq'::regclass) NOT NULL,
+    manager_staff_id smallint NOT NULL,
+    address_id smallint NOT NULL,
+    last_update timestamp without time zone DEFAULT now() NOT NULL
+);
 
 
 --
--- Name: payment_p2007_06_rental_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 253 (class 1259 OID 27827)
+-- Name: sales_by_store; Type: VIEW; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_06
-    ADD CONSTRAINT payment_p2007_06_rental_id_fkey FOREIGN KEY (rental_id) REFERENCES rental(rental_id);
+CREATE VIEW public.sales_by_store AS
+ SELECT (((c.city)::text || ','::text) || (cy.country)::text) AS store,
+    (((m.first_name)::text || ' '::text) || (m.last_name)::text) AS manager,
+    sum(p.amount) AS total_sales
+   FROM (((((((public.payment p
+     JOIN public.rental r ON ((p.rental_id = r.rental_id)))
+     JOIN public.inventory i ON ((r.inventory_id = i.inventory_id)))
+     JOIN public.store s ON ((i.store_id = s.store_id)))
+     JOIN public.address a ON ((s.address_id = a.address_id)))
+     JOIN public.city c ON ((a.city_id = c.city_id)))
+     JOIN public.country cy ON ((c.country_id = cy.country_id)))
+     JOIN public.staff m ON ((s.manager_staff_id = m.staff_id)))
+  GROUP BY cy.country, c.city, s.store_id, m.first_name, m.last_name
+  ORDER BY cy.country, c.city;
 
 
 --
--- Name: payment_p2007_06_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 254 (class 1259 OID 27832)
+-- Name: staff_list; Type: VIEW; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment_p2007_06
-    ADD CONSTRAINT payment_p2007_06_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES staff(staff_id);
+CREATE VIEW public.staff_list AS
+ SELECT s.staff_id AS id,
+    (((s.first_name)::text || ' '::text) || (s.last_name)::text) AS name,
+    a.address,
+    a.postal_code AS "zip code",
+    a.phone,
+    city.city,
+    country.country,
+    s.store_id AS sid
+   FROM (((public.staff s
+     JOIN public.address a ON ((s.address_id = a.address_id)))
+     JOIN public.city ON ((a.city_id = city.city_id)))
+     JOIN public.country ON ((city.country_id = country.country_id)));
 
 
 --
--- Name: payment_rental_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 3337 (class 2604 OID 27774)
+-- Name: payment_p2007_01 payment_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment
-    ADD CONSTRAINT payment_rental_id_fkey FOREIGN KEY (rental_id) REFERENCES rental(rental_id) ON UPDATE CASCADE ON DELETE SET NULL;
+ALTER TABLE ONLY public.payment_p2007_01 ALTER COLUMN payment_id SET DEFAULT nextval('public.payment_payment_id_seq'::regclass);
 
 
 --
--- Name: payment_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 3338 (class 2604 OID 27779)
+-- Name: payment_p2007_02 payment_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY payment
-    ADD CONSTRAINT payment_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE ONLY public.payment_p2007_02 ALTER COLUMN payment_id SET DEFAULT nextval('public.payment_payment_id_seq'::regclass);
 
 
 --
--- Name: rental_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 3339 (class 2604 OID 27784)
+-- Name: payment_p2007_03 payment_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY rental
-    ADD CONSTRAINT rental_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE ONLY public.payment_p2007_03 ALTER COLUMN payment_id SET DEFAULT nextval('public.payment_payment_id_seq'::regclass);
 
 
 --
--- Name: rental_inventory_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 3340 (class 2604 OID 27789)
+-- Name: payment_p2007_04 payment_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY rental
-    ADD CONSTRAINT rental_inventory_id_fkey FOREIGN KEY (inventory_id) REFERENCES inventory(inventory_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE ONLY public.payment_p2007_04 ALTER COLUMN payment_id SET DEFAULT nextval('public.payment_payment_id_seq'::regclass);
 
 
 --
--- Name: rental_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 3341 (class 2604 OID 27794)
+-- Name: payment_p2007_05 payment_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY rental
-    ADD CONSTRAINT rental_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE ONLY public.payment_p2007_05 ALTER COLUMN payment_id SET DEFAULT nextval('public.payment_payment_id_seq'::regclass);
 
 
 --
--- Name: staff_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 3342 (class 2604 OID 27799)
+-- Name: payment_p2007_06 payment_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY staff
-    ADD CONSTRAINT staff_address_id_fkey FOREIGN KEY (address_id) REFERENCES address(address_id) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: staff_store_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY staff
-    ADD CONSTRAINT staff_store_id_fkey FOREIGN KEY (store_id) REFERENCES store(store_id);
-
-
---
--- Name: store_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY store
-    ADD CONSTRAINT store_address_id_fkey FOREIGN KEY (address_id) REFERENCES address(address_id) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: store_manager_staff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY store
-    ADD CONSTRAINT store_manager_staff_id_fkey FOREIGN KEY (manager_staff_id) REFERENCES staff(staff_id) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: public; Type: ACL; Schema: -; Owner: postgres
---
+ALTER TABLE ONLY public.payment_p2007_06 ALTER COLUMN payment_id SET DEFAULT nextval('public.payment_payment_id_seq'::regclass);
 
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO PUBLIC;
 
+-- Completed on 2022-11-24 15:27:52
 
 --
 -- PostgreSQL database dump complete
