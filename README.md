@@ -73,7 +73,7 @@ payment_date       amount         sum
 History
 =======
 
-The Sakila example database was originally developed by Mike Hillyer of the MySQL AB documentation team. it was ported to other databases by DB Software Laboratory 
+The Sakila example database was originally developed by Mike Hillyer of the MySQL AB documentation team. it was ported to other databases by DB Software Laboratory.
 
 License: BSD
 Copyright DB Software Laboratory
