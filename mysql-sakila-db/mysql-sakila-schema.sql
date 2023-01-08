@@ -335,7 +335,7 @@ SELECT film.film_id AS FID, film.title AS title, film.description AS description
 FROM category LEFT JOIN film_category ON category.category_id = film_category.category_id LEFT JOIN film ON film_category.film_id = film.film_id
         JOIN film_actor ON film.film_id = film_actor.film_id
 	JOIN actor ON film_actor.actor_id = actor.actor_id
-GROUP BY film.film_id;
+GROUP BY film.film_id, category.name;
 
 --
 -- View structure for view `nicer_but_slower_film_list`
@@ -350,7 +350,7 @@ SELECT film.film_id AS FID, film.title AS title, film.description AS description
 FROM category LEFT JOIN film_category ON category.category_id = film_category.category_id LEFT JOIN film ON film_category.film_id = film.film_id
         JOIN film_actor ON film.film_id = film_actor.film_id
 	JOIN actor ON film_actor.actor_id = actor.actor_id
-GROUP BY film.film_id;
+GROUP BY film.film_id, category.name;
 
 --
 -- View structure for view `staff_list`
