@@ -1,0 +1,9 @@
+!path lib/*.jar
+
+!|dbfit.PostgresTest|
+
+!|Connect|localhost|dbfit|abc123|sakila|
+
+!|Query|select 'test' as x|
+|x                        |
+|test                     |
