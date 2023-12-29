@@ -1,0 +1,8 @@
+# connect.postgresql
+# sample dbfit connection file for postgresql
+# 
+
+service=localhost
+username=dbfit
+password=abc123   # Please use something more secure! :-)
+database=sakila

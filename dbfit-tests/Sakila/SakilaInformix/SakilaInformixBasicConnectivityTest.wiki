@@ -1,0 +1,9 @@
+!path lib/*.jar
+
+!|dbfit.InformixTest|
+
+!|Connect|hpz620:9088|dbfit|abc123|sakila|
+
+!|Query|select 'test' as x|
+|x                        |
+|test                     |
