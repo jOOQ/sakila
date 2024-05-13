@@ -261,7 +261,7 @@ CREATE TRIGGER film_trigger_au AFTER UPDATE ON film
 --
 
 CREATE TABLE film_actor (
-  actor_id INTEGER NOT NULL,
+  actor_id INT NOT NULL,
   film_id  INT NOT NULL,
   last_update TIMESTAMP NOT NULL,
   PRIMARY KEY  (actor_id,film_id),
@@ -294,7 +294,7 @@ CREATE TRIGGER film_actor_trigger_au AFTER UPDATE ON film_actor
 --
 
 CREATE TABLE film_category (
-  film_id INTEGER NOT NULL,
+  film_id INT NOT NULL,
   category_id INT  NOT NULL,
   last_update TIMESTAMP NOT NULL,
   PRIMARY KEY (film_id, category_id),
