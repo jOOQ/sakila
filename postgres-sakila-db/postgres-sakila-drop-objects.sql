@@ -54,3 +54,6 @@ DROP SEQUENCE staff_staff_id_seq;
 DROP SEQUENCE store_store_id_seq;
 
 DROP DOMAIN year;
+
+-- Drop Type
+DROP TYPE mpaa_rating;
