@@ -174,7 +174,7 @@ CREATE TABLE film_text (
   description TEXT,
   PRIMARY KEY  (film_id),
   FULLTEXT KEY idx_title_description (title,description)
-)ENGINE=MyISAM DEFAULT CHARSET=utf8;
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Triggers for loading film_text from film
